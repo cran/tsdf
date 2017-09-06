@@ -1,0 +1,146 @@
+---
+title: "Quick Start Guide"
+author: "Wenchuan Guo and Bob Zhong"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    fig_height: 6
+    fig_width: 7
+    highlight: tango
+    theme: united
+  pdf_document: null
+vignette: |
+  %\VignetteEngine{knitr::knitr} %\VignetteIndexEntry{Quick Start Guide} %\usepackage[UTF-8]{inputenc}
+---
+
+This guide introduces the basic usage of `tsdf`. For more details, see the documentation for individual functions.
+
+## Installation
+`tsdf` now is only available on GitHub and we will upload the package to CRAN after we run more tests on the functions. Type the following command in R console :
+```{r, eval=FALSE}
+#check if devtools is installed
+if(!"devtools" %in% rownames(installed.packages())){
+	install.packages(devtools)
+}
+devtools::install_github("wguo1990/tsdf")
+```
+Then the R package will be downloaded and installed to the default directories. Run the following command to load the package :
+```{r}
+library(tsdf)
+```
+We will briefly go over main functions and their basic usage in the following sections.
+
+## Zhong's 2-/3-stage Phase II designs
+To calculate Zhong's two-/three-stage design, users need to provide : left-side type I error(`alpha1`), right-side type I error(`alpha2`), type II error(`beta`), minimal response rate(`pc`) and unacceptable response rate(`pt`, alternative). The minimal response rate can be either single point or an interval. `stage` option specify 2 or 3 stage design. Run the following command to obtain a 2-stage design
+```{r}
+# type I errors
+alpha1 <- 0.15
+alpha2 <- 0.10
+# type II error
+beta <- 0.15
+# response rate
+pc <- 0.25
+# alternative 
+pt <- pc + 0.20
+# 2-stage design
+out <- opt.design(alpha1, alpha2, beta, pc, pt, stage = 2)
+```
+`out` is an object of class `opt.design`. S3 method `print` is available for  `opt.design` class. To extract information, run 
+```{r}
+print(out)
+```
+Alpha-spending method is added to two-/three-stage designs. `opt.design` supports Hwang-Shih-DeCani spending function where `sf.param` specifies the parameter. For two-stage design, the default value is set to be `NULL` which means alpha-spending is not used. For three-stage design, the default is 4. User can change this parameter to set the alpha spent at first 1 or 2 stage. For example, to use a Pocock-like spending function, let `sf.param = 1`, then run
+```{r, eval=FALSE}
+opt.design(alpha1, alpha2, beta, pc, pt, stage = 2, sf.param = 1)
+```
+
+## Decision table for Phase I dose-finding
+`dec.table` function is used to generate decision table for a three-stage dose-finding design. `alpha.l` (left side), `alpha.r` (right side), `alpha.u` (right side type I error for "DU", usually less than `alpha.r`) are three type I errors control the boundary of decisions. `pc` and `pc.u` are both target toxicity level where the latter controls the boundary of decision "DU" in the table. `pc` is either a single or an interval value. If `pc` is just a single value, for most cases, users may choose `pc = pc.u`. We call `dec.table` function as follows 
+```{r}
+# sample size 
+n <- rep(3, 3)
+# type I errors 
+alpha.l <- 0.6
+alpha.r <- 0.4
+alpha.u <- 0.2
+# target toxicity 
+pc <- 0.3
+pc.u <- pc
+# call dec.table
+out <- dec.table(alpha.l, alpha.r, alpha.u, pc, pc.u, n)
+```
+`out` is an object of class `dec.table` that contains all the relevant information including decision table, real type errors and input parameter. However, we do not recommend users to extract the components from this object directly. `plot` and `print` S3 method are available for `dec.table` class. 
+
+We can view the decision table using `print` function :
+```{r}
+print(out)
+```
+or visualize the decision table by executing the `plot` function :
+```{r}
+plot(out)
+```
+
+## Dose-finding simulations
+There are two functions that allow users to run dose-finding simulations using a user supplied decision table: `dec.sim` and `sl.sim`. To run simulations, users need to provide a decision table either from `dec.table` function or a user-supplied table (see details in next section), true probability of toxicity at each dose level, starting dose (default to lowest dose level) and number of simulated trials (default to 1000). 
+
+`dec.sim` runs one scenario simulation which is usually used for an initial test and `sl.sim` runs a list of scenarios from `.csv` or `.txt` files (See next section Data Format for details). Let's see an example :
+```{r}
+# true toxicity
+truep <- c(0.3, 0.45, 0.5, 0.6)
+# generate a decision table
+dt <- dec.table(0.6,0.4,0.2,0.3,0.3,c(3,3,3))
+# run simulation
+out1 <- dec.sim(truep, dt$table, start.level = 2, nsim = 1000)
+```
+The following command loads a sample scenarios list in `tsdf` package :
+```{r}
+test.file <- system.file("extdata", "testS.csv", package = "tsdf")
+```
+Run simulations using `sl.sim` :
+```{r}
+out2 <- sl.sim(dt$table, test.file)
+```
+`out1` and `out2` are both `dec.sim` class object. `out2` is also a class of `sl.sim` when the scenarios is more than 2. S3 method `summary` and `plot` are availiale for this class. For example, a summary of commonly used statistics is reported if we use the `summary` function :
+```{r}
+# target toxicity 
+pt <- c(0.3, 0.4)
+summary(out2, pt)
+```
+There are four different type of plots for `dec.sim` object where option `s` indicates the number of scenario you want to plot and `pt` is the target toxicity for each scenario, see more details in `plot.dec.sim` R documentation:
+```{r}
+# input information (true toxicity)
+plot(out2, s = 2, pt = c(0.3, 0.4), type="s")
+# probability of selecting as MTD at each dose level
+plot(out2, s = 2, pt = c(0.3, 0.4), type = "prob")
+# average number of patients treated at each dose level
+plot(out2, s = 2, pt = c(0.3, 0.4), type = "np")
+# number of DLTs experienced at each dose level
+plot(out2, s = 2, pt = c(0.3, 0.4), type="dlt")
+```
+
+There is a built-in function to put all different plots on same figure, simply run
+```{r fig.height = 8}
+plot(out2, pt = c(0.3, 0.4), type = "all", cex = 0.7)
+```
+
+## Scenarios list/customized table format
+The `.csv` or `.txt` files used for `sl.sim` look like :
+```{r echo=FALSE, results='asis'}
+sl <- system.file("extdata", "testS.csv", package = "tsdf")
+knitr::kable(read.table(sl, header = TRUE, sep = ","))
+```
+
+This example is saved under `\inst\extdata\testS.csv`, use `system.file` to load it in R. The following variables have to be included: `Start.dose` : the starting dose level; `N.trails` : the number of simulated trials; `Dose*` : true probabilities of toxicity at the dose levels. Note that users don't need put `NA` in the raw data if scenarios don't have equal number of dose levels. In the above example, the `NA` on the first row is blank in the raw `.csv` file. 
+
+Both `dec.sim` and `sl.sim` support user-supplied decision table. It can be either  `matrix`, `data.frame` or `table` in R. There is no checking on the format of the table in `tsdf`, so users need to make sure the input is a legitimate decision table for dose-finding. Also, the column name of the table should be the actual sample size instead of the default output of `read.table` which has column names `X.*` or `V.*`. For example, the following command reads the sample decision table in the package : 
+```{r, warning=FALSE}
+table.file <- system.file("extdata", "decTable.csv", package = "tsdf")
+dec <- read.table(table.file, sep = ",", col.names = c(3,4,8,10), row.names = 1, check.names = FALSE)
+colnames(dec)
+```
+
+Although there are many ways to import a decision table from `.csv` or `.txt` files, a typical decision table used for `dev.sim` and `sl.sim` functions have to have the following format when it's loaded in R:  
+```{r, echo=FALSE}
+knitr::kable(dec)
+```
+
