@@ -1,4 +1,7 @@
 ## ---- eval=FALSE---------------------------------------------------------
+#  install.packages("tsdf")
+
+## ---- eval=FALSE---------------------------------------------------------
 #  #check if devtools is installed
 #  if(!"devtools" %in% rownames(installed.packages())){
 #  	install.packages(devtools)
@@ -35,10 +38,9 @@ alpha.l <- 0.6
 alpha.r <- 0.4
 alpha.u <- 0.2
 # target toxicity 
-pc <- 0.3
-pc.u <- pc
+pt <- 0.3
 # call dec.table
-out <- dec.table(alpha.l, alpha.r, alpha.u, pc, pc.u, n)
+out <- dec.table(alpha.l, alpha.r, alpha.u, pt, n)
 
 ## ------------------------------------------------------------------------
 print(out)
@@ -50,7 +52,7 @@ plot(out)
 # true toxicity
 truep <- c(0.3, 0.45, 0.5, 0.6)
 # generate a decision table
-dt <- dec.table(0.6,0.4,0.2,0.3,0.3,c(3,3,3))
+dt <- dec.table(0.6,0.4,0.2,0.3,c(3,3,3))
 # run simulation
 out1 <- dec.sim(truep, dt$table, start.level = 2, nsim = 1000)
 

@@ -4,7 +4,7 @@
 \alias{dec.table}
 \title{generate three-stage dose-finding decision table}
 \usage{
-dec.table(alpha.l, alpha.r, alpha.u, pc, pc.u, n, sf = "Pocock")
+dec.table(alpha.l, alpha.r, alpha.u, pt, n, sf.param = 4, pe.par = 0.25)
 }
 \arguments{
 \item{alpha.l}{left-side overall type 1 error. Control the upper bound of dose escalation.}
@@ -13,13 +13,13 @@ dec.table(alpha.l, alpha.r, alpha.u, pc, pc.u, n, sf = "Pocock")
 
 \item{alpha.u}{right-side overall type 1 error. This also controls the lower bound of dose de-escalatition, but it is used to find lower bound for "DU".}
 
-\item{pc}{a numeric vector of target toxicity. Should be a vector with 1 or 2(when the target is an interval).}
-
-\item{pc.u}{a numeric vector of target toxicity which is used to obtain "DU" in the decision table.}
+\item{pt}{a numeric vector of target toxicity. Should be a vector with 1 or 2(when the target is an interval).}
 
 \item{n}{a vector of sample size at each stage. \code{sum(n)} is the total sample size. For A+B designs, \code{n} is a vector with length 2; for A+B+C designs, \code{n} has length 3.}
 
-\item{sf}{the alpha-spending function to be used. \code{sf="OF"} or "\code{sf="Pocock"} uses spending function in R package \code{\link{gsDesign}}; or a user supplied spending function.}
+\item{sf.param}{a single real value specifying the gamma parameter for which Hwang-Shih-DeCani spending is to be computed; allowable range is [-40, 40]. Details in\code{\link{gsDesign}}. Default to 4.}
+
+\item{pe.par}{alternative hypothesis that used to calculate power/type 2 error. The alternative is set to be \code{pe = pt + pe.par}. Default to 0.25.}
 
 \item{...}{not used argument.}
 }
@@ -27,13 +27,14 @@ dec.table(alpha.l, alpha.r, alpha.u, pc, pc.u, n, sf = "Pocock")
 An object of class "dec.table" is a list containing:
  \item{table}{the generated decision table.}
  \item{alpha.two}{a vector of true type 1 error for two-tailed test.}
+ \item{alpha.one}{a vector of true type 1 error for right-tailed test.}
+ \item{beta}{a single value of true type 2 error(depends on alternative).}
  \item{E}{a vector of "E" bound.}
  \item{D}{a vector of "D" bound.}
  \item{DU}{a vector of "DU" bound.}
- \item{pc}{input; a vector of target toxicity}
- \item{pc.u}{input; a vector of target toxicity }
+ \item{pt}{input; a vector of target toxicity}
  \item{n}{input; a vector with sample size at each stage.}
- \item{sf}{input; the alpha-spending function used.}
+ \item{sf.param}{input; the alpha-spending function parameter used.}
 }
 \description{
 Generate three stage dose finding decision table
@@ -44,15 +45,14 @@ Alpha-spending method is added to two-/three-stage designs. \code{dec.table} sup
 \examples{
 alpha.l <- 0.6
 alpha.r <- 0.4
-alpha.u <- 0.3
-pc <- c(0.29, 0.31)
-pc.u <- 0.3
+alpha.u <- 0.1
+pt <- 0.3
 # print out decision table for a 3+3+3 design 
 n <- rep(3, 3)
-dec.table(alpha.l, alpha.r, alpha.u, pc, pc.u, n)$table
+dec.table(alpha.l, alpha.r, alpha.u, pt, n)$table
 # 3+3 design
 n <- rep(3, 2)
- dec.table(alpha.l, alpha.r, alpha.u, pc, pc.u, n)$table
+dec.table(alpha.l, alpha.r, alpha.u, pt, n)$table
 }
 \author{
 Wenchuan Guo <wguo007@ucr.edu>
