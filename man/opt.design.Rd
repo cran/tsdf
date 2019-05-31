@@ -4,8 +4,9 @@
 \alias{opt.design}
 \title{Zhong's 2-/3- stage Phase II design}
 \usage{
-opt.design(alpha1, alpha2, beta, pc, pt, stage = 2, frac_n1 = c(0.2, 0.3),
-  frac_n2 = c(0.2, 0.4), sf.param = NULL, show = FALSE, nmax = 100, ...)
+opt.design(alpha1, alpha2, beta, pc, pt, stage = 2, two.sided = FALSE,
+  frac_n1 = NULL, frac_n2 = NULL, sf.param = NULL, show = FALSE,
+  nmax = 100, n.choice = 1, ...)
 }
 \arguments{
 \item{alpha1}{left-side overall type I error.}
@@ -20,15 +21,19 @@ opt.design(alpha1, alpha2, beta, pc, pt, stage = 2, frac_n1 = c(0.2, 0.3),
 
 \item{stage}{2 or 3. default to 2 (2-stage design).}
 
-\item{frac_n1}{proportion of n1. Used for 3-stage design. default to \code{c(0.2, 0.3)}, i.e. the range of \code{n1} is \code{0.2*n} to \code{0.3*n}}
+\item{two.sided}{logical flag. default to \code{FALSE}. if \code{two.sided = TRUE}, the trial may stop for superiority before the last stage.}
+
+\item{frac_n1}{proportion of n1. for 2-stage design, default to \code{c(0.3, 0.6)}, i.e. the range of \code{n1} is \code{0.2*n} to \code{0.5*n}. for 3-stage design, default to \code{c(0.2, 0.3)}, i.e. the range of \code{n1} is \code{0.2*n} to \code{0.3*n}}
 
 \item{frac_n2}{proportion of n2. Used for 3-stage design. default to \code{c(0.2, 0.4)}.}
 
-\item{sf.param}{a single real value specifying the gamma parameter for which Hwang-Shih-DeCani spending is to be computed; allowable range is [-40, 40]. Details in\code{\link{gsDesign}}. For two-stage designs, default to \code{NULL}(alpha-spending is not used); for three-stage designs, default to 4.}
+\item{sf.param}{a single real value specifying the gamma parameter for which Hwang-Shih-DeCani spending is to be computed; allowable range is [-40, 40]. Increasing this parameter implies that more error is spent early stage and less is available in late stage. For two-stage designs, default to \code{NULL}(alpha-spending is not used); for three-stage designs, default to 4.}
 
 \item{show}{logical. If \code{TRUE}, current sample size is shown as total sample size increase.}
 
 \item{nmax}{maximum sample size. default to 100.}
+
+\item{n.choice}{stop criterion for the search of feasible designs. stop if number of designs is more than \code{n.choice}}
 
 \item{...}{not used argument.}
 }
@@ -60,16 +65,17 @@ The two-stage design setup is: n1 patients are treated in the first stage. At th
  pt <- pc + 0.20
  # calculate optimal two-stage design without using alpha-spending
  opt.design(alpha1, alpha2, beta, pc, pt, stage=2)
- 
+ \dontrun{
  # calculate optimal two-stage design with Pocock-like spending function 
  opt.design(alpha1, alpha2, beta, pc, pt, stage = 2, sf.param = 1)
  
- # calculate optimal three-stage design with =O’Brien-Fleming like spending function
+ # calculate optimal three-stage design with =Oâ€™Brien-Fleming like spending function
  opt.design(alpha1, alpha2, beta, pc, pt, stage = 3, sf.param = -4)
+ }
 }
 \references{
 Zhong. (2012) Single-arm Phase IIA clinical trials with go/no-go decisions. \emph{Contemporary Clinical Trials}, \bold{33}, 1272--1279.
 }
 \author{
-Wenchuan Guo <wguo007@ucr.edu>
+Wenchuan Guo <wguo1017@gmail.com>
 }
